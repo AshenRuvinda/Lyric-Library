@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -14,11 +13,11 @@ import type { ArtistsStackParamList } from '@/app/navigationTypes';
 import { useArtistById, type Song, type Album } from '../hooks/useArtistById';
 // `useTheme` removed because it's not used in this screen
 
-type Props = NativeStackScreenProps<ArtistsStackParamList, 'ArtistDetail'>;
+type Props = Readonly<NativeStackScreenProps<ArtistsStackParamList, 'ArtistDetail'>>;
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function ArtistAvatar({ name }: { name: string }) {
+function ArtistAvatar({ name }: Readonly<{ name: string }>) {
   const initial = name.charAt(0).toUpperCase();
   return (
     <View style={styles.avatarWrapper}>
@@ -36,7 +35,7 @@ function ArtistAvatar({ name }: { name: string }) {
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ label }: { label: string }) {
+function SectionHeader({ label }: Readonly<{ label: string }>) {
   return (
     <View style={styles.sectionHeaderRow}>
       <AppText variant="sectionHeader" style={styles.sectionHeaderText}>
@@ -49,8 +48,8 @@ function SectionHeader({ label }: { label: string }) {
 // ─── Song Row ─────────────────────────────────────────────────────────────────
 
 interface SongRowProps {
-  song: Song;
-  onPress: () => void;
+  readonly song: Song;
+  readonly onPress: () => void;
 }
 
 function SongRow({ song, onPress }: SongRowProps) {
@@ -76,8 +75,8 @@ function SongRow({ song, onPress }: SongRowProps) {
 // ─── Album Row ────────────────────────────────────────────────────────────────
 
 interface AlbumRowProps {
-  album: Album;
-  onPress: () => void;
+  readonly album: Album;
+  readonly onPress: () => void;
 }
 
 function AlbumRow({ album, onPress }: AlbumRowProps) {
