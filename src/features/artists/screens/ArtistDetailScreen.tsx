@@ -282,12 +282,7 @@ const styles = StyleSheet.create({
     // Simulate gradient: deep purple → pink-purple
     backgroundColor: '#8B5CF6',
     // React Native doesn't support linear-gradient without expo-linear-gradient.
-    // Using a border trick for a two-tone effect:
-    borderTopColor: '#C084FC',
-    borderBottomColor: '#7C3AED',
-    borderLeftColor: '#A855F7',
-    borderRightColor: '#9333EA',
-    borderWidth: 0,
+    // Using backgroundColor as the primary visual style.
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#7C3AED',
