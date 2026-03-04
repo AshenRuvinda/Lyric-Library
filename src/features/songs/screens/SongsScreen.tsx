@@ -62,7 +62,7 @@ export default function SongsScreen() {
     }));
     const groupedObj = groupByInitial(stringSongs, 'title');
     return Object.keys(groupedObj)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map(letter => ({ title: letter, data: groupedObj[letter] }));
   }, [filteredSongs]);
 
@@ -103,11 +103,13 @@ export default function SongsScreen() {
         />
       </View>
 
-      {isLoading ? (
+      {isLoading && (
         <LoadingState message="Loading songs..." />
-      ) : isError ? (
+      )}
+      {!isLoading && isError && (
         <EmptyState title="Failed to load songs." />
-      ) : (
+      )}
+      {!isLoading && !isError && (
         <SectionList
           sections={grouped}
           keyExtractor={item => item.id}
