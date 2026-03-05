@@ -6,6 +6,8 @@ export type {
   Lyrics,
   SavedLyric,
   SearchResult,
+  ArtistsQueryParams,
+  SongsQueryParams,
   SongSortMode,
   SearchFilterType,
   SavedTabMode,
