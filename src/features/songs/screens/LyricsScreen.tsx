@@ -15,7 +15,7 @@ type Props = NativeStackScreenProps<SongsStackParamList, 'Lyrics'>;
  *  - S2-12: Save / unsave lyrics (heart button)
  *  - S3-01: Share lyrics via expo-sharing
  */
-export default function LyricsScreen({ route }: Props) {
+export default function LyricsScreen({ route }: Readonly<Props>) {
   const { songId, songTitle } = route.params;
 
   return (

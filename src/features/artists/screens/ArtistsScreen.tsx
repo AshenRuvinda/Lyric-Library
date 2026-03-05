@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreen, AppText, AppSearchBar, Chip, ArtistCard } from '@/components';
@@ -13,7 +13,7 @@ type Props = NativeStackScreenProps<ArtistsStackParamList, 'ArtistsList'>;
 
 // Generate alphabet filter options
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const FILTER_OPTIONS = ['All', ...ALPHABET];
+const FILTER_OPTIONS = ALPHABET;
 
 /**
  * Artists Browse Screen — displays artist grid with search and alphabet filter.
@@ -24,34 +24,15 @@ const FILTER_OPTIONS = ['All', ...ALPHABET];
  *  - Grid layout with ArtistCard components
  *  - Navigation to ArtistDetail screen
  */
-export default function ArtistsScreen({ navigation }: Props) {
+export default function ArtistsScreen({ navigation }: Readonly<Props>) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLetter, setSelectedLetter] = useState('All');
+  const [selectedLetter, setSelectedLetter] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
-  const { data: artists = [], isLoading, isError, refetch } = useArtists();
-
-  // Filter artists based on search and selected letter
-  const filteredArtists = useMemo(() => {
-    let filtered = artists;
-
-    // Apply letter filter
-    if (selectedLetter !== 'All') {
-      filtered = filtered.filter(
-        (artist) => artist.name.charAt(0).toUpperCase() === selectedLetter
-      );
-    }
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((artist) =>
-        artist.name.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [artists, selectedLetter, searchQuery]);
+  const { data: artists = [], isLoading, isError, refetch } = useArtists({
+    query: searchQuery,
+    startsWith: selectedLetter || undefined,
+  });
 
   const handleArtistPress = (artist: Artist) => {
     navigation.navigate('ArtistDetail', {
@@ -114,28 +95,28 @@ export default function ArtistsScreen({ navigation }: Props) {
       />
 
       {/* Alphabet Filter Chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterRow}
-        contentContainerStyle={styles.filterContent}
-      >
+      <View style={styles.filterRow}>
         {FILTER_OPTIONS.map((letter) => (
           <Chip
             key={letter}
             label={letter}
             active={selectedLetter === letter}
-            onPress={() => setSelectedLetter(letter)}
+            onPress={() =>
+              setSelectedLetter((previousLetter) =>
+                previousLetter === letter ? '' : letter
+              )
+            }
+            style={styles.letterChip}
           />
         ))}
-      </ScrollView>
+      </View>
 
       {/* Artists Grid */}
-      {filteredArtists.length === 0 ? (
+      {artists.length === 0 ? (
         <EmptyState
           title="No artists found"
           subtitle={
-            searchQuery || selectedLetter !== 'All'
+            searchQuery || selectedLetter
               ? 'Try adjusting your filters'
               : undefined
           }
@@ -143,7 +124,7 @@ export default function ArtistsScreen({ navigation }: Props) {
       ) : (
         <View style={styles.listContainer}>
           <FlashList
-            data={filteredArtists}
+            data={artists}
             renderItem={renderArtistCard}
             estimatedItemSize={180}
             numColumns={3}
@@ -162,13 +143,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     marginTop: spacing.md,
     marginBottom: spacing.lg,
-    maxHeight: 50,
   },
-  filterContent: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
+  letterChip: {
+    width: 32,
+    height: 32,
+    minWidth: 32,
+    borderRadius: 8,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
   },
   listContainer: {
     flex: 1,

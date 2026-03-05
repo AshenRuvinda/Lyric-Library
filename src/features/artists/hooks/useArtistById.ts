@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { lyricsRepository } from '@/services';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,56 +25,44 @@ export interface Artist {
   albums: Album[];
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_ARTISTS: Record<string, Artist> = {
-  '1': {
-    id: '1',
-    name: 'Taylor Swift',
-    songCount: 203,
-    popularSongs: [
-      { id: 'tswift-s1', title: 'Anti-Hero',     album: 'Midnights', year: 2022 },
-      { id: 'tswift-s2', title: 'Cruel Summer',  album: 'Lover',     year: 2019 },
-      { id: 'tswift-s3', title: 'Blank Space',   album: '1989',      year: 2014 },
-      { id: 'tswift-s4', title: 'Shake It Off',  album: '1989',      year: 2014 },
-      { id: 'tswift-s5', title: 'Love Story',    album: 'Fearless',  year: 2008 },
-    ],
-    albums: [
-      { id: 'tswift-a1', name: 'Midnights', year: 2022, songCount: 13 },
-      { id: 'tswift-a2', name: 'Folklore',  year: 2020, songCount: 16 },
-      { id: 'tswift-a3', name: '1989',      year: 2014, songCount: 13 },
-      { id: 'tswift-a4', name: 'Lover',     year: 2019, songCount: 18 },
-      { id: 'tswift-a5', name: 'Fearless',  year: 2008, songCount: 13 },
-    ],
-  },
-  '2': {
-    id: '2',
-    name: 'Beyoncé',
-    songCount: 187,
-    popularSongs: [
-      { id: 'beyonce-s1', title: 'Crazy in Love',  album: 'Dangerously in Love', year: 2003 },
-      { id: 'beyonce-s2', title: 'Halo',           album: 'I Am... Sasha Fierce', year: 2008 },
-      { id: 'beyonce-s3', title: 'Single Ladies',  album: 'I Am... Sasha Fierce', year: 2008 },
-    ],
-    albums: [
-      { id: 'beyonce-a1', name: 'Renaissance',         year: 2022, songCount: 16 },
-      { id: 'beyonce-a2', name: 'Lemonade',            year: 2016, songCount: 12 },
-      { id: 'beyonce-a3', name: 'I Am... Sasha Fierce', year: 2008, songCount: 13 },
-    ],
-  },
-};
-
 // ─── Repository ───────────────────────────────────────────────────────────────
 
 async function fetchArtistById(artistId: string): Promise<Artist> {
-  // Simulate network latency
-  await new Promise<void>(resolve => setTimeout(() => resolve(), 600));
+  const [artistData, artistSongs] = await Promise.all([
+    lyricsRepository.getArtistById(artistId),
+    lyricsRepository.getSongsByArtist(artistId),
+  ]);
 
-  const artist = MOCK_ARTISTS[artistId];
-  if (!artist) {
+  if (!artistData) {
     throw new Error(`Artist with id "${artistId}" not found`);
   }
-  return artist;
+
+  const popularSongs: Song[] = [...artistSongs]
+    .sort((left, right) => (right.popularity ?? 0) - (left.popularity ?? 0))
+    .slice(0, 5)
+    .map((song) => ({
+      id: song.id,
+      title: song.title,
+      album: song.albumTitle ?? 'Single',
+      year: song.releaseYear ?? 0,
+    }));
+
+  const albums: Album[] = [...(artistData.albums ?? [])]
+    .map((album) => ({
+      id: album.id,
+      name: album.title,
+      year: album.releaseYear,
+      songCount: album.songCount,
+    }))
+    .sort((left, right) => right.year - left.year);
+
+  return {
+    id: artistData.id,
+    name: artistData.name,
+    songCount: artistData.songCount,
+    popularSongs,
+    albums,
+  };
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────

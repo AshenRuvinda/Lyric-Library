@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, SectionList, useWindowDimensions, Platform, FlatList } from 'react-native';
 import { AppScreen, AppText, AppSearchBar, Chip, SongRow, LoadingState, EmptyState } from '@/components';
 import { useSongs } from '@/hooks/queries/useSongs';
-import { filterSongs } from '@/utils/filters';
 import { groupByInitial } from '@/utils/groupers';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SongsStackParamList } from '@/app/navigationTypes';
 import type { SongSortMode } from '@/types';
+import { colors, spacing } from '@/theme';
 
 /**
  * Songs Browse Screen.
@@ -47,10 +47,10 @@ export default function SongsScreen() {
   const [sort, setSort] = useState<SongSortKey>('title');
   const screenStyle = { ...styles.container, paddingHorizontal: width * 0.04 };
 
-  const { data: songs, isLoading, isError } = useSongs(sort);
+  const { data: songs, isLoading, isError } = useSongs({ sort, query });
 
   // Filter and group songs
-  const filteredSongs = useMemo(() => songs ? filterSongs(songs, query) : [], [songs, query]);
+  const filteredSongs = useMemo(() => songs ?? [], [songs]);
   // groupByInitial expects T extends Record<string, string>, but Song has optional string fields. We'll cast for grouping by title.
   const grouped = useMemo(() => {
     if (!filteredSongs.length) return [];
@@ -114,7 +114,9 @@ export default function SongsScreen() {
           sections={grouped}
           keyExtractor={item => item.id}
           renderSectionHeader={({ section: { title } }) => (
-            <AppText variant="sectionHeader" style={styles.sectionHeader}>{title}</AppText>
+            <View style={styles.sectionHeaderContainer}>
+              <AppText variant="sectionHeader" style={styles.sectionHeader}>{title}</AppText>
+            </View>
           )}
           renderItem={({ item }) => (
             <SongRow
@@ -173,9 +175,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   sectionHeader: {
-    marginTop: 16,
-    marginBottom: 4,
-    marginLeft: 8,
+    marginLeft: spacing.sm,
+  },
+  sectionHeaderContainer: {
+    backgroundColor: colors.bgPrimary,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xs,
+    zIndex: 2,
   },
   emptyList: {
     flexGrow: 1,
