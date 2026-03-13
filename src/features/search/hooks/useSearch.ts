@@ -3,9 +3,32 @@ import artistsJson from '@/data/mock/artists.json';
 import songsJson   from '@/data/mock/songs.json';
 import type { UseSearchParams, UseSearchReturn, SearchResults } from '../types';
 
+// ─── Mock data interfaces ─────────────────────────────────────────────────────
+interface MockAlbumItem {
+  id: string;
+  title: string;
+  artistName: string;
+  artistId: string;
+  songCount: number;
+}
+
+interface MockSongItem {
+  id: string;
+  title: string;
+  artistName: string;
+  albumTitle: string;
+}
+
+interface MockArtistItem {
+  id: string;
+  name: string;
+  songCount: number;
+  albums: MockAlbumItem[];
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function normalize(s: string) {
-  return s.toLowerCase().trim();
+  return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
 }
 
 function searchMockData(query: string, type: UseSearchParams['type']): SearchResults {
@@ -14,7 +37,7 @@ function searchMockData(query: string, type: UseSearchParams['type']): SearchRes
   const songs =
     type === 'artists' || type === 'albums'
       ? []
-      : (songsJson as any[]).filter(
+      : (songsJson as MockSongItem[]).filter(
           (s) =>
             normalize(s.title).includes(q) ||
             normalize(s.artistName).includes(q) ||
@@ -24,12 +47,12 @@ function searchMockData(query: string, type: UseSearchParams['type']): SearchRes
   const artists =
     type === 'songs' || type === 'albums'
       ? []
-      : (artistsJson as any[]).filter((a) => normalize(a.name).includes(q));
+      : (artistsJson as MockArtistItem[]).filter((a) => normalize(a.name).includes(q));
 
   const albums =
     type === 'songs' || type === 'artists'
       ? []
-      : (artistsJson as any[])
+      : (artistsJson as MockArtistItem[])
           .flatMap((a) => a.albums)
           .filter(
             (al) =>
@@ -47,6 +70,10 @@ export function useSearch({ query, type }: UseSearchParams): UseSearchReturn {
   const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
+    if (query === '') {
+      setDebouncedQuery('');
+      return;
+    }
     const timer = setTimeout(() => setDebouncedQuery(query), DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [query]);
