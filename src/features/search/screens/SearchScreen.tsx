@@ -35,8 +35,9 @@ function avatarColor(seed: string): string {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 type SearchNavProp = NativeStackNavigationProp<SearchStackParamList>;
 
+// Fix 1: Props marked as read-only
 interface SearchScreenProps {
-  navigation: SearchNavProp;
+  readonly navigation: SearchNavProp;
 }
 
 // ─── Filter config ────────────────────────────────────────────────────────────
@@ -48,17 +49,13 @@ const FILTERS: { label: string; value: SearchFilterType }[] = [
 ];
 
 // ─── AvatarBlock ─────────────────────────────────────────────────────────────
+// Fix 1: Props marked as read-only
 function AvatarBlock({
   letter,
   seed,
   size = 46,
   circle = false,
-}: {
-  letter: string;
-  seed: string;
-  size?: number;
-  circle?: boolean;
-}) {
+}: Readonly<{ letter: string; seed: string; size?: number; circle?: boolean }>) {
   return (
     <View
       style={[
@@ -83,7 +80,8 @@ function AvatarBlock({
 }
 
 // ─── Result rows ─────────────────────────────────────────────────────────────
-function SongRow({ song, onPress }: { song: Song; onPress: (s: Song) => void }) {
+// Fix 1: Props marked as read-only
+function SongRow({ song, onPress }: Readonly<{ song: Song; onPress: (s: Song) => void }>) {
   return (
     <TouchableOpacity
       style={styles.row}
@@ -103,13 +101,11 @@ function SongRow({ song, onPress }: { song: Song; onPress: (s: Song) => void }) 
   );
 }
 
+// Fix 1: Props marked as read-only
 function ArtistRow({
   artist,
   onPress,
-}: {
-  artist: Artist;
-  onPress: (a: Artist) => void;
-}) {
+}: Readonly<{ artist: Artist; onPress: (a: Artist) => void }>) {
   return (
     <TouchableOpacity
       style={styles.row}
@@ -129,13 +125,11 @@ function ArtistRow({
   );
 }
 
+// Fix 1: Props marked as read-only
 function AlbumRow({
   album,
   onPress,
-}: {
-  album: Album;
-  onPress: (a: Album) => void;
-}) {
+}: Readonly<{ album: Album; onPress: (a: Album) => void }>) {
   return (
     <TouchableOpacity
       style={styles.row}
@@ -156,7 +150,8 @@ function AlbumRow({
 }
 
 // ─── Section label + card ─────────────────────────────────────────────────────
-function SectionLabel({ label }: { label: string }) {
+// Fix 1: Props marked as read-only
+function SectionLabel({ label }: Readonly<{ label: string }>) {
   return (
     <View style={styles.sectionLabelWrap}>
       <AppText variant="sectionHeader">{label}</AppText>
@@ -164,7 +159,8 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
-function ResultCard({ children }: { children: React.ReactNode }) {
+// Fix 1: Props marked as read-only
+function ResultCard({ children }: Readonly<{ children: React.ReactNode }>) {
   return <View style={styles.resultCard}>{children}</View>;
 }
 
@@ -187,7 +183,8 @@ function EmptyState() {
   );
 }
 
-function NoResultsState({ query }: { query: string }) {
+// Fix 1: Props marked as read-only
+function NoResultsState({ query }: Readonly<{ query: string }>) {
   return (
     <View style={styles.stateWrap}>
       <Icon name="search" size={40} color={colors.textTertiary} />
@@ -246,6 +243,64 @@ export default function SearchScreen({ navigation }: SearchScreenProps) {
   const hasArtists = results.artists.length > 0;
   const hasAlbums  = results.albums.length  > 0;
 
+  // Fix 3: Extract nested ternary into an independent statement
+  let resultsContent: React.ReactNode;
+  if (isLoading) {
+    resultsContent = (
+      <ActivityIndicator style={styles.loader} color={colors.primary} size="large" />
+    );
+  } else if (isEmpty) {
+    resultsContent = <EmptyState />;
+  } else if (hasNoResults) {
+    resultsContent = <NoResultsState query={query} />;
+  } else {
+    resultsContent = (
+      <>
+        {hasSongs && (
+          <>
+            <SectionLabel label="SONGS" />
+            <ResultCard>
+              {results.songs.map((song, i) => (
+                <React.Fragment key={song.id}>
+                  <SongRow song={song} onPress={handleSongPress} />
+                  {i < results.songs.length - 1 && <RowDivider />}
+                </React.Fragment>
+              ))}
+            </ResultCard>
+          </>
+        )}
+
+        {hasArtists && (
+          <>
+            <SectionLabel label="ARTISTS" />
+            <ResultCard>
+              {results.artists.map((artist, i) => (
+                <React.Fragment key={artist.id}>
+                  <ArtistRow artist={artist} onPress={handleArtistPress} />
+                  {i < results.artists.length - 1 && <RowDivider />}
+                </React.Fragment>
+              ))}
+            </ResultCard>
+          </>
+        )}
+
+        {hasAlbums && (
+          <>
+            <SectionLabel label="ALBUMS" />
+            <ResultCard>
+              {results.albums.map((album, i) => (
+                <React.Fragment key={album.id}>
+                  <AlbumRow album={album} onPress={handleAlbumPress} />
+                  {i < results.albums.length - 1 && <RowDivider />}
+                </React.Fragment>
+              ))}
+            </ResultCard>
+          </>
+        )}
+      </>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.bgPrimary} />
@@ -303,57 +358,7 @@ export default function SearchScreen({ navigation }: SearchScreenProps) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {isLoading ? (
-          <ActivityIndicator style={styles.loader} color={colors.primary} size="large" />
-        ) : isEmpty ? (
-          <EmptyState />
-        ) : hasNoResults ? (
-          <NoResultsState query={query} />
-        ) : (
-          <>
-            {hasSongs && (
-              <>
-                <SectionLabel label="SONGS" />
-                <ResultCard>
-                  {results.songs.map((song, i) => (
-                    <React.Fragment key={song.id}>
-                      <SongRow song={song} onPress={handleSongPress} />
-                      {i < results.songs.length - 1 && <RowDivider />}
-                    </React.Fragment>
-                  ))}
-                </ResultCard>
-              </>
-            )}
-
-            {hasArtists && (
-              <>
-                <SectionLabel label="ARTISTS" />
-                <ResultCard>
-                  {results.artists.map((artist, i) => (
-                    <React.Fragment key={artist.id}>
-                      <ArtistRow artist={artist} onPress={handleArtistPress} />
-                      {i < results.artists.length - 1 && <RowDivider />}
-                    </React.Fragment>
-                  ))}
-                </ResultCard>
-              </>
-            )}
-
-            {hasAlbums && (
-              <>
-                <SectionLabel label="ALBUMS" />
-                <ResultCard>
-                  {results.albums.map((album, i) => (
-                    <React.Fragment key={album.id}>
-                      <AlbumRow album={album} onPress={handleAlbumPress} />
-                      {i < results.albums.length - 1 && <RowDivider />}
-                    </React.Fragment>
-                  ))}
-                </ResultCard>
-              </>
-            )}
-          </>
-        )}
+        {resultsContent}
       </ScrollView>
     </SafeAreaView>
   );
