@@ -1,6 +1,4 @@
-export type { Artist, Song, Album } from '@/types';
-
-export type SearchFilterType = 'all' | 'songs' | 'artists' | 'albums';
+export type { Artist, Song, Album, SearchFilterType } from '@/types';
 
 export interface SearchResults {
   songs:   import('@/types').Song[];
@@ -10,7 +8,7 @@ export interface SearchResults {
 
 export interface UseSearchParams {
   query: string;
-  type:  SearchFilterType;
+  type:  'all' | 'song' | 'artist' | 'album';
 }
 
 export interface UseSearchReturn {

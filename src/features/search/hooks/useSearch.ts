@@ -17,7 +17,7 @@ function searchMockData(query: string, type: UseSearchParams['type']): SearchRes
   const q = normalize(query);
 
   const songs =
-    type === 'artists' || type === 'albums'
+    type === 'artist' || type === 'album'
       ? []
       : rawSongs.filter(
           (s) =>
@@ -27,12 +27,12 @@ function searchMockData(query: string, type: UseSearchParams['type']): SearchRes
         );
 
   const artists =
-    type === 'songs' || type === 'albums'
+    type === 'song' || type === 'album'
       ? []
       : rawArtists.filter((a) => normalize(a.name).includes(q));
 
   const albums: Album[] =
-    type === 'songs' || type === 'artists'
+    type === 'song' || type === 'artist'
       ? []
       : rawArtists
           .flatMap((a) => a.albums)

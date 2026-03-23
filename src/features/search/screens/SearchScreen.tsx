@@ -16,7 +16,6 @@ import { Feather as Icon } from '@expo/vector-icons';
 import { AppText, AppSearchBar } from '@/components';
 import { colors, spacing, radii, shadows } from '@/theme';
 import { useSearch } from '../hooks/useSearch';
-import { SearchFilterType } from '../types';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SearchStackParamList } from '@/app/navigationTypes';
 import type { Song, Artist, Album } from '@/types';
@@ -41,11 +40,12 @@ interface SearchScreenProps {
 }
 
 // ─── Filter config ────────────────────────────────────────────────────────────
-const FILTERS: { label: string; value: SearchFilterType }[] = [
-  { label: 'All',     value: 'all'     },
-  { label: 'Songs',   value: 'songs'   },
-  { label: 'Artists', value: 'artists' },
-  { label: 'Albums',  value: 'albums'  },
+type FilterValue = 'all' | 'song' | 'artist' | 'album';
+const FILTERS: { label: string; value: FilterValue }[] = [
+  { label: 'All',     value: 'all'    },
+  { label: 'Songs',   value: 'song'   },
+  { label: 'Artists', value: 'artist' },
+  { label: 'Albums',  value: 'album'  },
 ];
 
 // ─── AvatarBlock ─────────────────────────────────────────────────────────────
@@ -203,7 +203,7 @@ function NoResultsState({ query }: Readonly<{ query: string }>) {
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function SearchScreen({ navigation }: SearchScreenProps) {
   const [query,          setQuery]          = useState('');
-  const [activeFilter,   setActiveFilter]   = useState<SearchFilterType>('all');
+  const [activeFilter,   setActiveFilter]   = useState<FilterValue>('all');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
   const { results, isLoading, isEmpty, hasNoResults } = useSearch({
